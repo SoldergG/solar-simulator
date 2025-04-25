@@ -1,0 +1,344 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark Mode (default) */
+  --glass-background: rgba(16, 18, 27, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  
+  --vision-blur: 12px;
+  --vision-radius: 16px;
+  
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  
+  --bg-main: #030712;
+  --bg-panel: rgba(16, 18, 27, 0.4);
+  --gradient-primary: radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.15), transparent 50%);
+  --gradient-secondary: radial-gradient(ellipse at bottom left, rgba(139, 92, 246, 0.15), transparent 50%);
+  
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --input-border: rgba(255, 255, 255, 0.08);
+  --input-focus-border: rgba(255, 255, 255, 0.2);
+  
+  --btn-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%);
+  --btn-hover-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 1) 100%);
+  
+  --card-hover: rgba(255, 255, 255, 0.05);
+  --scrollbar-track: rgba(255, 255, 255, 0.03);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+}
+
+/* Light Mode */
+.light-mode {
+  --glass-background: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-highlight: rgba(0, 0, 0, 0.02);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  
+  --text-primary: rgba(15, 23, 42, 0.95);
+  --text-secondary: rgba(51, 65, 85, 0.75);
+  
+  --bg-main: #f8fafc;
+  --bg-panel: rgba(255, 255, 255, 0.7);
+  --gradient-primary: radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.08), transparent 50%);
+  --gradient-secondary: radial-gradient(ellipse at bottom left, rgba(139, 92, 246, 0.08), transparent 50%);
+  
+  --input-bg: rgba(255, 255, 255, 0.5);
+  --input-border: rgba(0, 0, 0, 0.08);
+  --input-focus-border: rgba(59, 130, 246, 0.3);
+  
+  --btn-gradient: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 1) 100%);
+  --btn-hover-gradient: linear-gradient(135deg, rgba(37, 99, 235, 1) 0%, rgba(29, 78, 216, 1) 100%);
+  
+  --card-hover: rgba(0, 0, 0, 0.02);
+  --scrollbar-track: rgba(0, 0, 0, 0.03);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.1);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: var(--gradient-primary), var(--gradient-secondary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.input {
+  border-radius: 12px;
+  padding: 0.625rem 1rem;
+  width: 100%;
+  transition: all 0.3s ease;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 0.75rem;
+}
+
+.input:focus {
+  outline: none;
+  background: var(--input-bg);
+  border-color: var(--input-focus-border);
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.15);
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.glass-panel {
+  background: var(--glass-background);
+  border-radius: var(--vision-radius);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--vision-blur));
+  -webkit-backdrop-filter: blur(var(--vision-blur));
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--input-focus-border);
+}
+
+.btn-primary {
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  background: var(--btn-gradient);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transform-style: preserve-3d;
+}
+
+.btn-primary:hover {
+  background: var(--btn-hover-gradient);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: 0.5s;
+  transform: translateX(-100%);
+}
+
+.btn-primary:hover::before {
+  transform: translateX(100%);
+}
+
+/* Tema do mapa */
+.vision-map-container {
+  position: relative;
+  border-radius: var(--vision-radius);
+  overflow: hidden;
+}
+
+/* Override para o Leaflet */
+.leaflet-container {
+  border-radius: var(--vision-radius);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.leaflet-control-container .leaflet-control {
+  border-radius: 8px !important;
+  backdrop-filter: blur(var(--vision-blur));
+  -webkit-backdrop-filter: blur(var(--vision-blur));
+  background: var(--glass-background) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-primary) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  backdrop-filter: blur(var(--vision-blur));
+  -webkit-backdrop-filter: blur(var(--vision-blur));
+  background: var(--glass-background) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--glass-background) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+/* Painel selecionado */
+.panel-selected {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Animação para fazer elementos aparecerem suavemente */
+.slide-in-bottom {
+  animation: slide-in-bottom 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+@keyframes slide-in-bottom {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Switcher de tema no estilo Vision OS */
+.theme-switch {
+  width: 50px;
+  height: 26px;
+  background: var(--glass-background);
+  border-radius: 50px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  border: 1px solid var(--glass-border);
+  transition: all 0.3s ease;
+}
+
+.theme-switch:hover {
+  border-color: var(--input-focus-border);
+}
+
+.theme-switch-ball {
+  width: 20px;
+  height: 20px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  position: absolute;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.theme-switch[data-mode="dark"] .theme-switch-ball {
+  transform: translateX(0);
+}
+
+.theme-switch[data-mode="light"] .theme-switch-ball {
+  transform: translateX(24px);
+}
+
+.theme-switch-icon {
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.7;
+  color: var(--text-primary);
+  transition: opacity 0.3s ease;
+}
+
+.theme-switch-icon.sun {
+  right: 6px;
+}
+
+.theme-switch-icon.moon {
+  left: 6px;
+}
+
+/* Scrollbar estilo Vision OS */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--scrollbar-thumb), 0.2);
+}
+
+/* Componentes Vision OS */
+.vision-card {
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--glass-background);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--vision-blur));
+  -webkit-backdrop-filter: blur(var(--vision-blur));
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.vision-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--input-focus-border);
+}
+
+/* Aba de resultados */
+.result-tab {
+  padding: 12px 20px;
+  border-radius: 12px 12px 0 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--vision-blur));
+  -webkit-backdrop-filter: blur(var(--vision-blur));
+}
+
+.result-tab.active {
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Toggle Vision OS */
+.vision-toggle {
+  display: flex;
+  background: var(--glass-background);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.vision-toggle-option {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  flex: 1;
+}
+
+.vision-toggle-option.active {
+  background: rgba(59, 130, 246, 0.1);
+}
