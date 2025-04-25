@@ -67,3 +67,4 @@ npm run dev
 - **Frontend**: React, Vite, Tailwind CSS, Leaflet (mapas), Chart.js (gráficos)
 - **Backend**: Node.js, Express
 - **Dados solares**: API PVGIS (European Commission Joint Research Centre)
+# solar-simulator
