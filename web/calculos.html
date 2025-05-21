@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculos Solares - SolarSim</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Variáveis para temas */
+        :root[data-theme="light"] {
+            --card-background: white;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --card-shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.1);
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --form-background: #f8fafc;
+            --form-border: #e5e7eb;
+        }
+        
+        :root[data-theme="dark"] {
+            --card-background: #1f2937;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --card-shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.4);
+            --text-primary: #f3f4f6;
+            --text-secondary: #e5e7eb;
+            --text-muted: #9ca3af;
+            --form-background: #111827;
+            --form-border: #374151;
+        }
+        
+        /* Estilos específicos para a página de cálculos */
+        .calculos-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .calculos-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .solar-panels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .solar-panel-card {
+            background: var(--card-background, white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow, 0 4px 6px rgba(0, 0, 0, 0.1));
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .solar-panel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-hover, 0 10px 20px rgba(0, 0, 0, 0.1));
+        }
+        
+        .panel-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .panel-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .panel-efficiency {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin: 1rem 0;
+        }
+        
+        .panel-range {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .panel-description {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            min-height: 60px;
+        }
+        
+        .select-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+        
+        .select-button:hover {
+            background: #2563eb;
+        }
+        
+        .selected-panel {
+            background: var(--form-background);
+            border: 2px solid #3b82f6;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            color: var(--text-primary);
+        }
+        
+        .calculation-results {
+            margin-top: 2rem;
+            background: var(--form-background);
+            padding: 1.5rem;
+            border-radius: 12px;
+            color: var(--text-primary);
+        }
+        
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--form-border);
+            border-radius: 6px;
+            background-color: var(--card-background);
+            color: var(--text-primary);
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--form-border);
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-container">
+            <div class="toolbar-logo">SolarSim</div>
+            <nav class="toolbar-nav">
+                <a href="index.html" class="toolbar-link">Início</a>
+                <a href="mapa.html" class="toolbar-link">Mapa</a>
+                <a href="calculos.html" class="toolbar-link active">Cálculos</a>
+                <a href="projetos.html" class="toolbar-link">Meus Projetos</a>
+            </nav>
+            <div class="toolbar-actions">
+                <div class="user-profile" id="user-profile">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <span id="user-name">Usuário</span>
+                </div>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema claro/escuro">
+                    <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+                        <path d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5001M17.6859 17.69L18.5 18.5001M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"></path>
+                    </svg>
+                    <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3.32031 11.6835C3.32031 16.6541 7.34975 20.6835 12.3203 20.6835C16.1075 20.6835 19.3483 18.3443 20.6768 15.032C19.6402 15.4486 18.5059 15.6834 17.3203 15.6834C12.3497 15.6834 8.32031 11.654 8.32031 6.68342C8.32031 5.50338 8.55165 4.36259 8.96453 3.32996C5.65605 4.66028 3.32031 7.89912 3.32031 11.6835Z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="calculos-container">
+        <div class="calculos-header">
+            <h1>Cálculos de Energia Solar</h1>
+            <p>Selecione um tipo de painel solar e insira os dados para calcular a produção estimada</p>
+        </div>
+
+        <div class="solar-panels-grid" id="solar-panels-grid">
+            <!-- Painéis serão carregados via JavaScript -->
+        </div>
+
+        <div class="selected-panel" id="selected-panel" style="display: none;">
+            <h2>Painel Selecionado: <span id="selected-panel-name"></span></h2>
+            <div class="panel-details" id="panel-details">
+                <!-- Detalhes do painel serão preenchidos via JavaScript -->
+            </div>
+            
+            <div class="calculation-form">
+                <h3>Dados para Cálculo</h3>
+                <div class="input-group">
+                    <label for="area">Área disponível (m²):</label>
+                    <input type="number" id="area" min="1" step="0.01" placeholder="Ex: 50">
+                </div>
+                <div class="input-group">
+                    <label for="radiacao">Radiação solar média (kWh/m²/dia):</label>
+                    <input type="number" id="radiacao" min="1" step="0.1" value="5.4" placeholder="Ex: 5.4">
+                </div>
+                <div class="input-group">
+                    <label for="perdas">Perdas do sistema (%):</label>
+                    <input type="number" id="perdas" min="0" max="100" value="14" placeholder="Ex: 14">
+                </div>
+                <button id="calcular" class="select-button">Calcular Produção</button>
+            </div>
+            
+            <div class="calculation-results" id="results" style="display: none;">
+                <h3>Resultados</h3>
+                <div id="results-content">
+                    <!-- Resultados serão preenchidos via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carrega os painéis solares do arquivo de configuração
+            const solarPanels = window.appConfig.solarPanels;
+            const container = document.getElementById('solar-panels-grid');
+            
+            // Cria os cards dos painéis solares
+            solarPanels.forEach(panel => {
+                const card = document.createElement('div');
+                card.className = 'solar-panel-card';
+                card.dataset.panelId = panel.id;
+                
+                card.innerHTML = `
+                    <div class="panel-icon">${panel.icon || '☀️'}</div>
+                    <div class="panel-name" style="color: ${panel.color || '#3b82f6'}">${panel.name}</div>
+                    <div class="panel-efficiency">${panel.efficiency}%</div>
+                    <div class="panel-range">Eficiência: ${panel.range}</div>
+                    <div class="panel-description">${panel.description}</div>
+                    <button class="select-button" data-panel-id="${panel.id}">Selecionar</button>
+                `;
+                
+                container.appendChild(card);
+                
+                // Adiciona evento de clique no botão de seleção
+                const button = card.querySelector('.select-button');
+                button.addEventListener('click', () => selectPanel(panel));
+            });
+            
+            // Adiciona evento ao botão de cálculo
+            document.getElementById('calcular').addEventListener('click', calcularProducao);
+            
+            // Função para selecionar um painel
+            function selectPanel(panel) {
+                document.getElementById('selected-panel').style.display = 'block';
+                document.getElementById('selected-panel-name').textContent = panel.name;
+                
+                // Rola até a seção de cálculo
+                document.getElementById('selected-panel').scrollIntoView({ behavior: 'smooth' });
+                
+                // Armazena o painel selecionado
+                window.selectedPanel = panel;
+                
+                // Limpa resultados anteriores
+                document.getElementById('results').style.display = 'none';
+            }
+            
+            // Função para calcular a produção
+            function calcularProducao() {
+                const panel = window.selectedPanel;
+                const area = parseFloat(document.getElementById('area').value);
+                const radiacao = parseFloat(document.getElementById('radiacao').value);
+                const perdas = parseFloat(document.getElementById('perdas').value);
+                
+                if (!panel || isNaN(area) || isNaN(radiacao) || isNaN(perdas)) {
+                    alert('Por favor, preencha todos os campos corretamente.');
+                    return;
+                }
+                
+                // Cálculos básicos (simplificados)
+                const eficiencia = panel.efficiency / 100; // Converte para decimal
+                const perdasDec = 1 - (perdas / 100); // Fator de perdas
+                
+                // Cálculo da produção diária (kWh/dia)
+                const producaoDiaria = area * radiacao * eficiencia * perdasDec;
+                
+                // Cálculo da produção mensal (considerando 30 dias)
+                const producaoMensal = producaoDiaria * 30;
+                
+                // Cálculo da produção anual
+                const producaoAnual = producaoMensal * 12;
+                
+                // Exibe os resultados
+                const resultsDiv = document.getElementById('results-content');
+                resultsDiv.innerHTML = `
+                    <div class="result-item">
+                        <span>Produção diária estimada:</span>
+                        <span>${producaoDiaria.toFixed(2)} kWh/dia</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Produção mensal estimada:</span>
+                        <span>${producaoMensal.toFixed(2)} kWh/mês</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Produção anual estimada:</span>
+                        <span>${producaoAnual.toFixed(2)} kWh/ano</span>
+                    </div>
+                `;
+                
+                document.getElementById('results').style.display = 'block';
+            }
+            
+            // Configura o tema
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            
+            // Configura o botão de alternar tema
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateThemeIcon(newTheme);
+                });
+            }
+            
+            function updateThemeIcon(theme) {
+                const lightIcon = document.getElementById('theme-icon-light');
+                const darkIcon = document.getElementById('theme-icon-dark');
+                
+                if (theme === 'dark') {
+                    lightIcon.style.display = 'block';
+                    darkIcon.style.display = 'none';
+                } else {
+                    lightIcon.style.display = 'none';
+                    darkIcon.style.display = 'block';
+                }
+            }
+            
+            // Carrega as informações do usuário
+            if (window.getCurrentUser) {
+                const user = window.getCurrentUser();
+                if (user) {
+                    const userNameElement = document.getElementById('user-name');
+                    const userAvatarElement = document.getElementById('user-avatar');
+                    
+                    if (userNameElement) userNameElement.textContent = user.name || 'Usuário';
+                    if (userAvatarElement) userAvatarElement.textContent = (user.name || 'U').charAt(0).toUpperCase();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

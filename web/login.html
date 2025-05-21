@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrar - Meteo Mapa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Biblioteca Supabase via CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+      /* Estilos para mensagens de feedback */
+      .form-info {
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+      
+      .success-message {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 1rem;
+        text-align: center;
+        font-weight: 500;
+      }
+      
+      .test-banner {
+        background: rgba(59, 130, 246, 0.9);
+        color: white;
+        text-align: center;
+        padding: 0.5rem;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 2000;
+        font-size: 0.9rem;
+      }
+      
+      .test-banner p {
+        margin: 0;
+      }
+      
+      .login-container {
+        max-width: 400px;
+        width: 100%;
+        margin: 80px auto;
+        padding: 2rem;
+      }
+      
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      
+      .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-background);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+      }
+      
+      .form-input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+      
+      .btn-block {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        text-align: center;
+      }
+      
+      .login-footer {
+        margin-top: 1.5rem;
+        text-align: center;
+        color: var(--text-secondary);
+      }
+      
+      .celestica-brand {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-primary);
+      }
+      
+      .login-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      
+      .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .forgot-password {
+        color: var(--accent-primary);
+        font-size: 0.9rem;
+      }
+      
+      .social-login {
+        margin-top: 2rem;
+        text-align: center;
+      }
+      
+      .social-login-title {
+        position: relative;
+        margin-bottom: 1.5rem;
+        color: var(--text-secondary);
+      }
+      
+      .social-login-title::before,
+      .social-login-title::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 35%;
+        height: 1px;
+        background-color: var(--glass-border);
+      }
+      
+      .social-login-title::before {
+        left: 0;
+      }
+      
+      .social-login-title::after {
+        right: 0;
+      }
+      
+      .social-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+      }
+      
+      .social-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--glass-background);
+        border: 1px solid var(--glass-border);
+        transition: all 0.2s ease;
+      }
+      
+      .social-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      
+      .demo-notice {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+      
+      .demo-button {
+        display: inline-block;
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--accent-primary);
+        color: white;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+      }
+      
+      .demo-button:hover {
+        background: var(--accent-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Elementos de fundo para o efeito Vision OS -->
+    <div id="vision-background" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; overflow: hidden;">
+      <div class="vision-blob" style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0) 70%); filter: blur(50px); top: -200px; right: -100px;"></div>
+      <div class="vision-blob" style="position: absolute; width: 700px; height: 700px; background: radial-gradient(circle, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0) 70%); filter: blur(60px); bottom: -200px; left: -100px;"></div>
+      <div class="vision-blob" style="position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(236,72,153,0) 70%); filter: blur(40px); top: 50%; right: 10%;"></div>
+    </div>
+    
+    <!-- Toolbar no topo da página -->
+    <div class="toolbar">
+      <div class="toolbar-container">
+        <div class="toolbar-logo">Meteo Mapa</div>
+        <nav class="toolbar-nav">
+          <a href="index.html" class="toolbar-link">Início</a>
+          <a href="mapa.html" class="toolbar-link">Mapa</a>
+        </nav>
+        <div class="toolbar-actions">
+          <a href="registro.html" class="btn-signup">Criar Conta</a>
+          
+          <!-- Botão para alternar tema claro/escuro -->
+          <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema claro/escuro">
+            <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5001M17.6859 17.69L18.5 18.5001M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"></path></svg>
+            <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.32031 11.6835C3.32031 16.6541 7.34975 20.6835 12.3203 20.6835C16.1075 20.6835 19.3483 18.3443 20.6768 15.032C19.6402 15.4486 18.5059 15.6834 17.3203 15.6834C12.3497 15.6834 8.32031 11.654 8.32031 6.68342C8.32031 5.50338 8.55165 4.36259 8.96453 3.32996C5.65605 4.66028 3.32031 7.89912 3.32031 11.6835Z"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="container">
+      <div class="login-container glass-panel">
+        <div class="celestica-brand">celestica.com</div>
+        
+        <form id="login-form">
+          <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" class="form-input" placeholder="seu@email.com" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="password" class="form-label">Senha</label>
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+          </div>
+          
+          <div class="login-options">
+            <div class="remember-me">
+              <input type="checkbox" id="remember" checked>
+              <label for="remember">Lembrar-me</label>
+            </div>
+            <a href="#" class="forgot-password">Esqueceu a senha?</a>
+          </div>
+          
+          <button type="submit" class="btn-primary btn-block">Entrar</button>
+        </form>
+        
+        <div class="social-login">
+          <p class="social-login-title">Ou entre com</p>
+          <div class="social-buttons">
+            <a href="#" class="social-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            </a>
+            <a href="#" class="social-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" fill="#1877F2"/></svg>
+            </a>
+            <a href="#" class="social-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#000"/></svg>
+            </a>
+          </div>
+        </div>
+        
+        <div class="login-footer">
+          Não tem uma conta? <a href="registro.html">Registre-se</a>
+        </div>
+        
+        <div class="demo-notice">
+          <p>Quer testar a plataforma sem criar uma conta?</p>
+          <a href="mapa.html" class="demo-button">Acessar Demonstração</a>
+        </div>
+      </div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script>
+      // Configura o tema inicial com base nas preferências do sistema
+      document.addEventListener('DOMContentLoaded', function() {
+        // Carrega o tema salvo ou usa as preferências do sistema
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Atualiza o ícone do tema
+        updateThemeIcon(savedTheme);
+        
+        // Configura o botão de alternar tema
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+          const currentTheme = document.documentElement.getAttribute('data-theme');
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          
+          // Salva a preferência do usuário
+          localStorage.setItem('theme', newTheme);
+          
+          // Atualiza o tema
+          document.documentElement.setAttribute('data-theme', newTheme);
+          
+          // Atualiza o ícone
+          updateThemeIcon(newTheme);
+        });
+        
+        // Exibe banner de modo de teste se estiver ativado
+        if (window.appConfig && window.appConfig.app.testMode) {
+          const testBanner = document.createElement('div');
+          testBanner.className = 'test-banner';
+          testBanner.innerHTML = '<p>Modo de demonstração ativo - Todas as funcionalidades estão disponíveis para teste</p>';
+          document.body.insertBefore(testBanner, document.body.firstChild);
+        }
+        
+        // Inicializa o cliente Supabase quando a página carregar
+        if (typeof initSupabase === 'function') {
+          initSupabase();
+        }
+        
+        // Configura o formulário de login
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const email = document.getElementById('email').value.trim();
+          const password = document.getElementById('password').value;
+          
+          // Desativa o botão de login e mostra indicador de carregamento
+          const loginButton = document.getElementById('login-button');
+          const originalButtonText = loginButton.innerHTML;
+          loginButton.disabled = true;
+          loginButton.innerHTML = '<span class="loading-spinner"></span> Entrando...';
+          
+          try {
+            // Validações básicas
+            if (!email || !password) {
+              alert('Por favor, preencha todos os campos.');
+              return;
+            }
+            
+            // Verificar se o email do usuário está no formato correto
+            if (!email.includes('@')) {
+              alert('Por favor, insira um email válido.');
+              return;
+            }
+            
+            // Verifica se o modo de teste está ativado
+            if (window.appConfig && window.appConfig.app.testMode) {
+              console.log('Modo de teste ativado - login automático');
+              // Em modo de teste, faz login com o usuário demo
+              const demoUser = window.appConfig.users[0];
+              if (window.loginUser(demoUser)) {
+                showLoginSuccess();
+              }
+              return;
+            }
+            
+            // Tenta fazer login com Supabase
+            if (typeof window.loginUser === 'function') {
+              const result = await window.loginUser(email, password);
+              
+              if (result.success) {
+                // Login bem-sucedido
+                showLoginSuccess();
+              } else {
+                // Erro no login
+                alert(result.error || 'Erro ao fazer login. Por favor, tente novamente.');
+              }
+            } else {
+              // Fallback para o sistema antigo se a função de login não estiver disponível
+              // Verifica se o email e senha correspondem a um usuário registrado
+              let foundUser = null;
+              
+              // Primeiro verifica nos usuários de demonstração
+              if (window.appConfig && window.appConfig.users) {
+                foundUser = window.appConfig.users.find(user => 
+                  user.email === email && user.password === password
+                );
+              }
+              
+              // Se não encontrou nos usuários de demonstração, verifica nos registrados
+              if (!foundUser && window.appConfig && window.appConfig.app.localStorageEnabled) {
+                try {
+                  const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                  foundUser = registeredUsers.find(user => 
+                    user.email === email && user.password === password
+                  );
+                } catch (e) {
+                  console.error('Erro ao verificar usuários registrados:', e);
+                }
+              }
+              
+              if (foundUser) {
+                // Usuário encontrado, faz login
+                loginUser(foundUser);
+                showLoginSuccess();
+              } else {
+                alert('Email ou senha incorretos. Por favor, tente novamente.');
+              }
+            }
+          } catch (error) {
+            console.error('Erro durante o login:', error);
+            alert('Ocorreu um erro durante o login. Por favor, tente novamente.');
+          } finally {
+            // Reativa o botão de login
+            loginButton.disabled = false;
+            loginButton.innerHTML = originalButtonText;
+          }
+        });
+      });
+      
+      // Função para exibir mensagem de sucesso e redirecionar
+      function showLoginSuccess() {
+        // Exibe mensagem de sucesso 
+        const successMessage = document.createElement('div');
+        successMessage.className = 'success-message';
+        successMessage.textContent = 'Login realizado com sucesso! Redirecionando...';
+        document.querySelector('.login-container').appendChild(successMessage);
+        
+        // Redireciona para a página do mapa após breve delay para mostrar feedback
+        setTimeout(() => {
+          window.location.href = 'mapa.html';
+        }, 1000);
+      }
+      
+      // Função de login local (fallback se a função global não estiver disponível)
+      function loginUser(user) {
+        try {
+          // Tenta usar a função global primeiro
+          if (window.loginUser) {
+            const success = window.loginUser(user);
+            if (success) {
+              showLoginSuccess();
+              return;
+            }
+          }
+          
+          // Implementação de fallback
+          sessionStorage.setItem('currentUser', JSON.stringify(user));
+          
+          if (window.isStorageAvailable && window.isStorageAvailable('localStorage')) {
+            localStorage.setItem('lastLoggedUser', JSON.stringify(user));
+            localStorage.setItem('rememberedEmail', user.email);
+          }
+          
+          console.log('Usuário logado com sucesso (método local):', user.name);
+          showLoginSuccess();
+        } catch (error) {
+          console.error('Erro ao fazer login:', error);
+          alert('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
+        }
+      }
+      
+      function updateThemeIcon(theme) {
+        const lightIcon = document.getElementById('theme-icon-light');
+        const darkIcon = document.getElementById('theme-icon-dark');
+        
+        if (theme === 'dark') {
+          lightIcon.style.display = 'block';
+          darkIcon.style.display = 'none';
+        } else {
+          lightIcon.style.display = 'none';
+          darkIcon.style.display = 'block';
+        }
+      }
+    </script>
+  </body>
+</html>

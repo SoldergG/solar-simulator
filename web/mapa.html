@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mapa Meteorológico - Meteo Mapa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="https://unpkg.com/@maptiler/sdk@1.5.0/dist/maptiler-sdk.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .map-container {
+        width: 100%;
+        height: calc(100vh - 70px);
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        margin-top: 70px;
+      }
+      
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+      
+      .floating-action-button {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.8rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
+        z-index: 100;
+      }
+      
+      .floating-action-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        background: var(--accent-secondary);
+      }
+      
+      .panel-icon {
+        font-size: 1.5rem;
+      }
+      
+      .panel-text {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      
+      @media (max-width: 768px) {
+        .panel-text {
+          display: none;
+        }
+        
+        .floating-action-button {
+          padding: 1rem;
+        }
+      }
+      
+      /* Estilos para o overlay de carregamento */
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        backdrop-filter: blur(5px);
+        transition: opacity 0.3s ease;
+      }
+      
+      [data-theme="dark"] .loading-overlay {
+        background: rgba(15, 23, 42, 0.8);
+      }
+      
+      .loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(59, 130, 246, 0.1);
+        border-radius: 50%;
+        border-top-color: var(--accent-primary);
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loader p {
+        color: var(--text-primary);
+        font-weight: 500;
+        margin: 0;
+      }
+      
+      .map-error {
+        text-align: center;
+        padding: 2rem;
+        background: var(--glass-background);
+        border-radius: 10px;
+        box-shadow: var(--glass-shadow);
+        max-width: 80%;
+        margin: 0 auto;
+      }
+      
+      .error-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+      
+      .retry-button {
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-top: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      
+      .retry-button:hover {
+        background: var(--accent-secondary);
+        transform: translateY(-2px);
+      }
+      
+      .sidebar {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 300px;
+        z-index: 10;
+      }
+      
+      .map-controls {
+        background: var(--glass-background);
+        backdrop-filter: blur(var(--vision-blur));
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: var(--glass-shadow);
+        border: 1px solid var(--glass-border);
+        margin-bottom: 1rem;
+      }
+      
+      .map-controls h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+      
+      .layer-control {
+        margin-bottom: 0.5rem;
+      }
+      
+      .layer-control label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+      }
+      
+      .weather-info {
+        background: var(--glass-background);
+        backdrop-filter: blur(var(--vision-blur));
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: var(--glass-shadow);
+        border: 1px solid var(--glass-border);
+      }
+      
+      .weather-info h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+      
+      .weather-data {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      
+      .weather-data-item {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .weather-data-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+      
+      .weather-data-value {
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
+      
+      .search-box {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+        width: 300px;
+      }
+      
+      .search-container {
+        background: var(--glass-background);
+        backdrop-filter: blur(var(--vision-blur));
+        border-radius: 12px;
+        padding: 0.75rem;
+        box-shadow: var(--glass-shadow);
+        border: 1px solid var(--glass-border);
+      }
+      
+      .search-input {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+      }
+      
+      .search-input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+      
+      .toolbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+      }
+      
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--accent-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      
+      .solar-panel-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+      }
+      
+      .solar-panel-card {
+        background: var(--glass-background);
+        backdrop-filter: blur(var(--vision-blur));
+        border-radius: 16px;
+        border: 1px solid var(--glass-border);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .solar-panel-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--glass-hover-shadow);
+      }
+      
+      .solar-panel-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        animation: floating 3s ease-in-out infinite;
+      }
+      
+      @keyframes floating {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0px); }
+      }
+      
+      .solar-panel-name {
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+        background: linear-gradient(45deg, currentColor, currentColor 60%, var(--accent-secondary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        display: inline-block;
+      }
+      
+      .solar-panel-efficiency-container {
+        margin: 1rem 0;
+        position: relative;
+      }
+      
+      .solar-panel-efficiency {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--accent-primary);
+        margin: 0 auto;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+      }
+      
+      .solar-panel-range {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        padding: 0.25rem 0.75rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 100px;
+        display: inline-block;
+        font-weight: 500;
+      }
+      
+      .solar-panel-description {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        max-width: 90%;
+      }
+      
+      .solar-panel-select {
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 1rem;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .solar-panel-select:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: 0.5s;
+      }
+      
+      .solar-panel-card:hover .solar-panel-select:before {
+        left: 100%;
+      }
+      
+      .solar-panel-select:hover {
+        background: var(--accent-secondary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      }
+      
+      .solar-panel-card.selected {
+        border: 2px solid var(--accent-primary);
+        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+        transform: translateY(-5px) scale(1.02);
+      }
+      
+      .solar-panel-card.selected .solar-panel-select {
+        background: #10b981;
+        pointer-events: none;
+      }
+      
+      .solar-panel-card.selected:after {
+        content: "✔";
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 24px;
+        height: 24px;
+        background: #10b981;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+      
+      .panel-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .panel-modal-content {
+        background: var(--glass-background);
+        backdrop-filter: blur(var(--vision-blur));
+        border-radius: 16px;
+        border: 1px solid var(--glass-border);
+        padding: 2rem;
+        max-width: 800px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      
+      .panel-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      
+      .panel-modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+      
+      .panel-modal-close {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+      }
+      
+      .panel-modal-body {
+        margin-bottom: 1.5rem;
+      }
+      
+      /* Estilos para notificações */
+      .notification-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: var(--glass-background);
+        backdrop-filter: blur(var(--vision-blur));
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transform: translateX(120%);
+        transition: all 0.3s ease;
+        max-width: 350px;
+      }
+      
+      .notification-message.active {
+        transform: translateX(0);
+      }
+      
+      .notification-message.error {
+        border-left: 4px solid #ef4444;
+      }
+      
+      .notification-message.success {
+        border-left: 4px solid #10b981;
+      }
+      
+      .notification-message.warning {
+        border-left: 4px solid #f59e0b;
+      }
+      
+      .notification-message.info {
+        border-left: 4px solid #3b82f6;
+      }
+      
+      .notification-icon {
+        margin-right: 12px;
+        font-size: 1.25rem;
+      }
+      
+      .notification-text {
+        font-size: 0.95rem;
+        color: var(--text-primary);
+      }
+      
+      .notification-message.fade-out {
+        opacity: 0;
+      }
+      
+      /* Estilos para indicador de eficiência */
+      .calculated-efficiency {
+        font-size: 1.25rem;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 8px;
+        display: inline-block;
+        margin-top: 8px;
+      }
+      
+      .high-efficiency {
+        background-color: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+      }
+      
+      .medium-efficiency {
+        background-color: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+      }
+      
+      .low-efficiency {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+      
+      #selected-location {
+        font-size: 0.9rem;
+        margin-top: 8px;
+        color: var(--text-secondary);
+        display: none;
+      }
+      
+      #selected-panel-info {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.1);
+      }
+      
+      #selected-panel-icon {
+        font-size: 1.5rem;
+      }
+      
+      #selected-panel-name {
+        font-weight: 500;
+        color: var(--accent-primary);
+      }
+      
+      #selected-panel-efficiency {
+        background: rgba(59, 130, 246, 0.2);
+        color: var(--accent-primary);
+        padding: 4px 8px;
+        border-radius: 100px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Elementos de fundo para o efeito Vision OS -->
+    <div id="vision-background" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; overflow: hidden;">
+      <div class="vision-blob" style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0) 70%); filter: blur(50px); top: -200px; right: -100px;"></div>
+      <div class="vision-blob" style="position: absolute; width: 700px; height: 700px; background: radial-gradient(circle, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0) 70%); filter: blur(60px); bottom: -200px; left: -100px;"></div>
+      <div class="vision-blob" style="position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(236,72,153,0) 70%); filter: blur(40px); top: 50%; right: 10%;"></div>
+    </div>
+    
+    <!-- Toolbar no topo da página -->
+    <div class="toolbar">
+      <div class="toolbar-container">
+        <div class="toolbar-logo">Meteo Mapa</div>
+        <nav class="toolbar-nav">
+          <a href="index.html" class="toolbar-link">Início</a>
+          <a href="mapa.html" class="toolbar-link active">Mapa</a>
+          <a href="calculos.html" class="toolbar-link">Cálculos</a>
+          <a href="projetos.html" class="toolbar-link">Meus Projetos</a>
+        </nav>
+        <div class="toolbar-actions">
+          <!-- Perfil do usuário -->
+          <div class="user-profile" id="user-profile">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <span id="user-name">Usuário</span>
+          </div>
+          
+          <!-- Botão para alternar tema claro/escuro -->
+          <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema claro/escuro">
+            <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5001M17.6859 17.69L18.5 18.5001M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"></path></svg>
+            <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.32031 11.6835C3.32031 16.6541 7.34975 20.6835 12.3203 20.6835C16.1075 20.6835 19.3483 18.3443 20.6768 15.032C19.6402 15.4486 18.5059 15.6834 17.3203 15.6834C12.3497 15.6834 8.32031 11.654 8.32031 6.68342C8.32031 5.50338 8.55165 4.36259 8.96453 3.32996C5.65605 4.66028 3.32031 7.89912 3.32031 11.6835Z"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="map-container" id="map-container">
+      <!-- Overlay de carregamento -->
+      <div id="loading-overlay" class="loading-overlay">
+        <div class="loader">
+          <div class="spinner"></div>
+          <p>Carregando mapa...</p>
+        </div>
+      </div>
+      
+      <div id="map"></div>
+      
+      <!-- Botão de ação flutuante para selecionar painéis solares -->
+      <button id="open-panel-modal" class="floating-action-button">
+        <span class="panel-icon">☀️</span>
+        <span class="panel-text">Selecionar Painel Solar</span>
+      </button>
+      
+      <div class="sidebar">
+        <div class="map-controls">
+          <h3>Camadas do Mapa</h3>
+          <div class="layer-control">
+            <label>
+              <input type="checkbox" id="layer-temperature" checked>
+              Temperatura
+            </label>
+          </div>
+          <div class="layer-control">
+            <label>
+              <input type="checkbox" id="layer-precipitation">
+              Precipitação
+            </label>
+          </div>
+          <div class="layer-control">
+            <label>
+              <input type="checkbox" id="layer-wind">
+              Vento
+            </label>
+          </div>
+          <div class="layer-control">
+            <label>
+              <input type="checkbox" id="layer-clouds">
+              Nuvens
+            </label>
+          </div>
+          <div class="layer-control">
+            <label>
+              <input type="checkbox" id="layer-solar">
+              Radiação Solar
+            </label>
+          </div>
+        </div>
+        
+        <div class="weather-info">
+          <h3>Dados Meteorológicos</h3>
+          <div class="weather-data">
+            <div class="weather-data-item">
+              <div class="weather-data-label">Temperatura</div>
+              <div class="weather-data-value">--°C</div>
+            </div>
+            <div class="weather-data-item">
+              <div class="weather-data-label">Umidade</div>
+              <div class="weather-data-value">--%</div>
+            </div>
+            <div class="weather-data-item">
+              <div class="weather-data-label">Vento</div>
+              <div class="weather-data-value">-- km/h</div>
+            </div>
+            <div class="weather-data-item">
+              <div class="weather-data-label">Radiação Solar</div>
+              <div class="weather-data-value">-- W/m²</div>
+            </div>
+            <div id="selected-location"></div>
+            <div id="selected-panel-info">
+              <span id="selected-panel-icon"></span>
+              <span id="selected-panel-name"></span>
+              <span id="selected-panel-efficiency"></span>
+            </div>
+            <div id="calculated-efficiency" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="search-box">
+        <div class="search-container">
+          <input type="text" class="search-input" placeholder="Buscar localização...">
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal para exibir os painéis solares -->
+    <div id="panel-modal" class="panel-modal">
+      <div class="panel-modal-content">
+        <div class="panel-modal-header">
+          <h2 class="panel-modal-title">Selecione um Painel Solar</h2>
+          <button class="panel-modal-close">&times;</button>
+        </div>
+        <div class="panel-modal-body">
+          <div class="solar-panel-grid">
+            <!-- Gerar os painéis dinamicamente a partir da configuração -->
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const solarPanelGrid = document.querySelector('.solar-panel-grid');
+                
+                // Verificar se temos acesso aos dados dos painéis
+                if (window.appConfig && window.appConfig.solarPanels) {
+                  // Limpar o grid antes de adicionar novos painéis
+                  solarPanelGrid.innerHTML = '';
+                  
+                  // Adicionar cada painel da configuração
+                  window.appConfig.solarPanels.forEach(panel => {
+                    const panelCard = document.createElement('div');
+                    panelCard.className = 'solar-panel-card';
+                    panelCard.dataset.panel = panel.id;
+                    
+                    panelCard.innerHTML = `
+                      <div class="solar-panel-icon">${panel.icon}</div>
+                      <div class="solar-panel-name" style="color: ${panel.color};">
+                        ${panel.name}
+                      </div>
+                      <div class="solar-panel-efficiency-container">
+                        <div class="solar-panel-efficiency">${panel.efficiency}%</div>
+                      </div>
+                      <div class="solar-panel-range">${panel.range}</div>
+                      <div class="solar-panel-description">${panel.description}</div>
+                      <button class="solar-panel-select" aria-label="Selecionar ${panel.name}">
+                        Selecionar
+                      </button>
+                    `;
+                    
+                    solarPanelGrid.appendChild(panelCard);
+                  });
+                  
+                  // Adicionar os event listeners aos botões de seleção
+                  const selectButtons = document.querySelectorAll('.solar-panel-select');
+                  selectButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                      const panelCard = this.closest('.solar-panel-card');
+                      const panelType = panelCard.dataset.panel;
+                      
+                      // Destacar o painel selecionado
+                      document.querySelectorAll('.solar-panel-card').forEach(card => {
+                        card.classList.remove('selected');
+                      });
+                      panelCard.classList.add('selected');
+                      
+                      // Selecionar o painel atual
+                      const selectedPanel = window.appConfig.solarPanels.find(p => p.id === panelType);
+                      
+                      // Atualizar informações do painel selecionado
+                      localStorage.setItem('selectedPanel', JSON.stringify(selectedPanel));
+                      
+                      // Mostrar feedback de seleção
+                      const modalTitle = document.querySelector('.panel-modal-title');
+                      modalTitle.textContent = `Painel ${selectedPanel.name} Selecionado`;
+                      
+                      // Fechar o modal após um breve delay para mostrar feedback
+                      setTimeout(() => {
+                        document.getElementById('panel-modal').style.display = 'none';
+                      }, 1000);
+                    });
+                  });
+                } else {
+                  // Mensagem de fallback se não encontrar os dados
+                  solarPanelGrid.innerHTML = '<div class="error-message">Dados dos painéis não disponíveis.</div>';
+                }
+              });
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Scripts principais -->
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    
+    <!-- O script map-loader.js carregará as bibliotecas de mapa dinamicamente se necessário -->
+    <script src="map-loader.js"></script>
+    <script>
+      // Função para verificar se a URL contém um parâmetro
+      function getUrlParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+      }
+      
+      // Configura a interface do usuário quando o DOM estiver pronto
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM carregado - Configurando interface');
+        
+        // Verifica se o arquivo de configuração foi carregado
+        if (typeof window.appConfig === 'undefined') {
+          console.error('Erro: arquivo de configuração não carregado!');
+          showError('Erro ao carregar configurações. Recarregue a página.');
+          return;
+        }
+        
+        // Verifica se devemos mostrar a seção de cálculos
+        const showCalc = getUrlParam('showCalc');
+        if (showCalc === 'true') {
+          // Abre a seção de cálculos após um breve delay para garantir que tudo foi carregado
+          setTimeout(() => {
+            const panelModal = document.getElementById('panel-modal');
+            if (panelModal) {
+              panelModal.style.display = 'flex';
+              showNotification('Selecione um painel solar para iniciar os cálculos', 'info');
+            }
+          }, 1500);
+        }
+        
+        // Carrega o tema salvo ou usa as preferências do sistema
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        // Botão para alternar tema
+        // Configura o botão de alternancia de tema
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+          themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            updateThemeIcon(newTheme);
+          });
+        }
+        
+        // Botão para abrir o modal de painéis solares
+        const openModalBtn = document.getElementById('open-panel-modal');
+        if (openModalBtn) {
+          openModalBtn.addEventListener('click', function() {
+            const panelModal = document.getElementById('panel-modal');
+            if (panelModal) panelModal.style.display = 'flex';
+          });
+        }
+        
+        // Botão para fechar o modal
+        const closeBtn = document.querySelector('.panel-modal-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function() {
+            const panelModal = document.getElementById('panel-modal');
+            if (panelModal) panelModal.style.display = 'none';
+          });
+        }
+        
+        // Fecha o modal se clicar fora do conteúdo
+        window.addEventListener('click', function(event) {
+          const modal = document.getElementById('panel-modal');
+          if (modal && event.target === modal) {
+            modal.style.display = 'none';
+          }
+        });
+        
+        // Exibe as informações do usuário atual
+        if (window.getCurrentUser) {
+          const currentUser = window.getCurrentUser();
+          if (currentUser) {
+            const userNameElement = document.getElementById('user-name');
+            if (userNameElement) {
+              userNameElement.textContent = currentUser.name || 'Usuário';
+            }
+            
+            const userAvatarElement = document.getElementById('user-avatar');
+            if (userAvatarElement) {
+              userAvatarElement.textContent = currentUser.avatar || 'U';
+            }
+          }
+        }
+        
+        // A inicialização do mapa é tratada pelo arquivo map-loader.js
+        
+        // Evento quando o checkbox de radiação solar é marcado
+        document.getElementById('layer-solar').addEventListener('change', function(e) {
+          if (!window.solarsimMap) return;
+          
+          if (e.target.checked) {
+            // Mostra o modal de seleção de painel
+            const panelModal = document.getElementById('panel-modal');
+            if (panelModal) panelModal.style.display = 'flex';
+            
+            // Se estiver usando MapLibre, ativa a camada de radiação solar
+            if (window.mapLibrary === 'maplibre') {
+              try {
+                window.solarsimMap.setLayoutProperty('solar-radiation-layer', 'visibility', 'visible');
+              } catch (error) {
+                console.warn('Não foi possível ativar a camada de radiação solar:', error);
+              }
+            }
+          } else {
+            // Desativa a camada se o checkbox for desmarcado
+            if (window.mapLibrary === 'maplibre') {
+              try {
+                window.solarsimMap.setLayoutProperty('solar-radiation-layer', 'visibility', 'none');
+              } catch (error) {
+                console.warn('Não foi possível desativar a camada de radiação solar:', error);
+              }
+            }
+          }
+        });
+        
+        // Fecha o modal quando o botão de fechar é clicado
+        closeButton.addEventListener('click', function() {
+          const panelModal = document.getElementById('panel-modal');
+          if (panelModal) panelModal.style.display = 'none';
+        });
+        
+        // Configura os botões de seleção de painel
+        const selectButtons = document.querySelectorAll('.solar-panel-select');
+        selectButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const panelCard = this.closest('.solar-panel-card');
+            const panelType = panelCard.dataset.panel;
+            
+            // Aqui você pode adicionar lógica para aplicar o painel selecionado
+            console.log(`Painel ${panelType} selecionado`);
+            
+            // Fecha o modal após a seleção
+            const panelModal = document.getElementById('panel-modal');
+            if (panelModal) panelModal.style.display = 'none';
+          });
+        });
+      });
+      
+      function updateThemeIcon(theme) {
+        const lightIcon = document.getElementById('theme-icon-light');
+        const darkIcon = document.getElementById('theme-icon-dark');
+        
+        if (theme === 'dark') {
+          lightIcon.style.display = 'block';
+          darkIcon.style.display = 'none';
+        } else {
+          lightIcon.style.display = 'none';
+          darkIcon.style.display = 'block';
+        }
+      }
+      
+      // Função para exibir erros e notificações
+      function showError(message) {
+        showNotification(message, 'error');
+      }
+      
+      function showNotification(message, type = 'info') {
+        // Cria um elemento para exibir a notificação
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = `notification-message ${type}`;
+        
+        // Seleciona o ícone correto baseado no tipo
+        let icon = 'ℹ️'; // info
+        if (type === 'error') icon = '⚠️';
+        if (type === 'success') icon = '✅';
+        if (type === 'warning') icon = '⚠️';
+        
+        notificationDiv.innerHTML = `
+          <div class="notification-icon">${icon}</div>
+          <div class="notification-text">${message}</div>
+        `;
+        
+        // Adiciona ao corpo do documento
+        document.body.appendChild(notificationDiv);
+        
+        // Adiciona classe para animação de entrada
+        setTimeout(() => {
+          notificationDiv.classList.add('active');
+        }, 10);
+        
+        // Remove após alguns segundos
+        const timeVisible = type === 'error' ? 7000 : 4000;
+        setTimeout(() => {
+          notificationDiv.classList.remove('active');
+          notificationDiv.classList.add('fade-out');
+          setTimeout(() => {
+            if (document.body.contains(notificationDiv)) {
+              document.body.removeChild(notificationDiv);
+            }
+          }, 500);
+        }, timeVisible);
+      }
+      
+      // As variáveis globais do mapa agora são gerenciadas pelo map-loader.js
+      // window.solarsimMap, window.mapInitialized e window.mapLibrary
+      
+      // Função para iniciar o mapa - agora apenas chama o carregador externo
+      function initMap() {
+        console.log('Redirecionando inicialização para map-loader.js');
+        
+        // Verifica se o usuário está logado - Modo flexivel para demonstração
+        const currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
+        if (!currentUser && !window.appConfig.app.testMode) {
+          console.warn('Usuário não autenticado. Redirecionando para a página de login...');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+          showNotification('Você precisa estar logado para acessar o mapa', 'warning');
+          return null;
+        }
+        
+        // Verifica a chave API
+        if (!window.appConfig || !window.appConfig.server || !window.appConfig.server.mapTilerApiKey) {
+          const errorMsg = 'A chave API do MapTiler não está definida';
+          console.error(errorMsg);
+          showError(errorMsg);
+          return null;
+        }
+        
+        // Chama o inicializador de mapa do map-loader.js se disponível
+        if (typeof window.initializeMap === 'function') {
+          return window.initializeMap();
+        }
+        
+        return null;
+      }
+      
+      // Função para configurar interações com o mapa
+      // Esta função é chamada pelo map-loader.js quando o mapa estiver pronto
+      function onMapLoaded(mapInstance) {
+        if (!mapInstance) return;
+        console.log('Mapa carregado com sucesso, configurando interações...');
+        
+        // Adiciona eventos de clique no mapa para selecionar locais
+        if (window.mapLibrary === 'maplibre') {
+          mapInstance.on('click', function(e) {
+            // Obtém as coordenadas do clique
+            const coords = e.lngLat;
+            if (!coords) return;
+            
+            // Coordenadas no formato [longitude, latitude]
+            const lng = coords.lng;
+            const lat = coords.lat;
+            
+            console.log(`Local selecionado: [${lng.toFixed(6)}, ${lat.toFixed(6)}]`);
+            
+            // Aqui você pode adicionar lógica para marcar o local no mapa
+            // e calcular a radiação solar para este ponto
+            showNotification(`Local selecionado: ${lat.toFixed(4)}, ${lng.toFixed(4)}`, 'info');
+              document.querySelector('.weather-data-item:nth-child(3) .weather-data-value').textContent = `${wind} km/h`;
+              document.querySelector('.weather-data-item:nth-child(4) .weather-data-value').textContent = `${radiation} W/m²`;
+              
+              // Exibe as coordenadas do ponto clicado
+              const locationElement = document.getElementById('selected-location');
+              if (locationElement) {
+                locationElement.textContent = `Latitude: ${coords.lat.toFixed(4)}, Longitude: ${coords.lng.toFixed(4)}`;
+                locationElement.style.display = 'block';
+              }
+              
+              // Se temos um painel selecionado, calcula a eficiência neste local
+              const savedPanel = localStorage.getItem('selectedPanel');
+              if (savedPanel) {
+                const panelData = JSON.parse(savedPanel);
+                // Calcular eficiência baseada na radiação solar e temperatura
+                const efficiencyFactor = panelData.performance ? 
+                  (panelData.performance.solarRadiation * (radiation/1000)) * 
+                  (panelData.performance.temperature * (1 - ((temp-25)/100))) : 0.9;
+                
+                const actualEfficiency = (panelData.efficiency * efficiencyFactor).toFixed(1);
+                
+                // Atualiza a interface com os cálculos de eficiência
+                const efficiencyElement = document.getElementById('calculated-efficiency');
+                if (efficiencyElement) {
+                  efficiencyElement.textContent = `${actualEfficiency}%`;
+                  efficiencyElement.style.display = 'block';
+                  
+                  // Adiciona classe visual baseada na eficiência
+                  efficiencyElement.className = 'calculated-efficiency';
+                  if (actualEfficiency >= panelData.efficiency * 0.9) {
+                    efficiencyElement.classList.add('high-efficiency');
+                  } else if (actualEfficiency >= panelData.efficiency * 0.7) {
+                    efficiencyElement.classList.add('medium-efficiency');
+                  } else {
+                    efficiencyElement.classList.add('low-efficiency');
+                  }
+                }
+                
+                // Exibe mensagem sobre adequação do local
+                showNotification(`Eficiência calculada para painel ${panelData.name}: ${actualEfficiency}%`, 'info');
+              }
+            }
+          });
+          
+          // Configura os controles de camadas
+          document.getElementById('layer-temperature').addEventListener('change', function(e) {
+            // Aqui você pode adicionar lógica para mostrar/ocultar camada de temperatura
+            console.log('Camada de temperatura:', e.target.checked);
+          });
+          
+          document.getElementById('layer-precipitation').addEventListener('change', function(e) {
+            // Aqui você pode adicionar lógica para mostrar/ocultar camada de precipitação
+            console.log('Camada de precipitação:', e.target.checked);
+          });
+          
+          document.getElementById('layer-wind').addEventListener('change', function(e) {
+            // Aqui você pode adicionar lógica para mostrar/ocultar camada de vento
+            console.log('Camada de vento:', e.target.checked);
+          });
+          
+          document.getElementById('layer-clouds').addEventListener('change', function(e) {
+            // Aqui você pode adicionar lógica para mostrar/ocultar camada de nuvens
+            console.log('Camada de nuvens:', e.target.checked);
+          });
+          
+        } catch (error) {
+          console.error('Erro ao inicializar o mapa:', error);
+          document.getElementById('map').innerHTML = `<div class="map-error"><h3>Erro ao inicializar o mapa</h3><p>${error.message}</p></div>`;
+        }
+      }
+      
+      function getTemperatureColor(temp) {
+        if (temp < 15) return '#4575b4'; // Azul - frio
+        if (temp < 20) return '#74add1'; // Azul claro
+        if (temp < 25) return '#fee090'; // Amarelo
+        if (temp < 30) return '#fdae61'; // Laranja
+        return '#d73027'; // Vermelho - quente
+      }
+    </script>
+  </body>
+</html>

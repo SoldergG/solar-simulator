@@ -1,0 +1,161 @@
+/* Estilos para a página inicial */
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.btn-hero {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  border-radius: 10px;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent-primary);
+  border: 2px solid var(--accent-primary);
+  padding: calc(0.75rem - 2px) calc(1.5rem - 2px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.features-section {
+  margin: 4rem 0;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--text-primary);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.feature-card {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--glass-hover-shadow);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.feature-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.solar-panel-section {
+  margin: 4rem 0;
+}
+
+.solar-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.solar-panel-card {
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--vision-blur));
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.solar-panel-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--glass-hover-shadow);
+}
+
+.solar-panel-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.solar-panel-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.solar-panel-efficiency {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin: 0.5rem 0;
+}
+
+.solar-panel-range {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.solar-panel-description {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.solar-panel-select {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.solar-panel-select:hover {
+  background: var(--accent-secondary);
+}

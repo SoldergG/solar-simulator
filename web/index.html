@@ -1,16 +1,89 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simulador Solar • Vision OS Style</title>
+    <title>Meteo Mapa - Meteorologia e Mapas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="home-styles.css">
     <style>
-      * {
-        font-family: 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      :root {
+        --bg-primary: rgba(255, 255, 255, 0.85);
+        --bg-secondary: rgba(255, 255, 255, 0.6);
+        --text-primary: #111827;
+        --text-secondary: #374151;
+        --accent-primary: #3b82f6;
+        --accent-secondary: #6366f1;
+        --glass-background: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.5);
+        --glass-shadow: rgba(0, 0, 0, 0.05);
       }
+      
+      /* Estilos para o boto de acesso ao mapa */
+      .map-access-container {
+        margin: 2rem auto;
+        width: 100%;
+        max-width: 600px;
+      }
+      
+      .map-access-button {
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+        text-decoration: none;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
+        transition: all 0.3s ease;
+      }
+      
+      .map-access-button:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(59, 130, 246, 0.6);
+      }
+      
+      .map-access-icon {
+        font-size: 3rem;
+        margin-right: 1.5rem;
+      }
+      
+      .map-access-text {
+        flex: 1;
+      }
+      
+      .map-access-text h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+      }
+      
+      .map-access-text p {
+        font-size: 1rem;
+        margin: 0;
+        opacity: 0.9;
+      }
+      
+      [data-theme="dark"] {
+        --bg-primary: rgba(15, 23, 42, 0.85);
+        --bg-secondary: rgba(30, 41, 59, 0.6);
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --accent-primary: #60a5fa;
+        --accent-secondary: #a5b4fc;
+        --glass-background: rgba(15, 23, 42, 0.75);
+        --glass-border: rgba(30, 41, 59, 0.5);
+        --glass-shadow: rgba(0, 0, 0, 0.2);
+      }
+      
+      * {
+        font-family: 'Inter', sans-serif;
+        box-sizing: border-box;
+      }
+      
       /* Loader para o Canvas WebGL */
       .loader {
         position: fixed;
@@ -18,15 +91,153 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: #091428;
+        background: var(--bg-primary);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 100;
       }
+      
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        transition: background 0.3s, color 0.3s;
+      }
+      
+      #root {
+        min-height: 100vh;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+      
+      .glass-panel {
+        background: var(--glass-background);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: 0 4px 30px var(--glass-shadow);
+      }
+      
+      .btn-primary {
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      
+      .theme-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-primary);
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        transition: all 0.2s ease;
+      }
+      
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-1px);
+      }
+      
+      .main-title {
+        font-size: 3.5rem;
+        font-weight: 600;
+        background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        margin-bottom: 0.5rem;
+        text-align: center;
+        letter-spacing: -0.02em;
+      }
+      
+      .title-container {
+        padding: 80px 0 2rem 0; /* 80px de padding-top para garantir que o título fique abaixo da toolbar */
+        text-align: center;
+      }
+      
+      .subtitle {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+      
+      .map-container {
+        margin-top: 1rem;
+        margin-bottom: 2rem;
+      }
+      
+      .container {
+        padding: 0 16px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
     </style>
   </head>
   <body>
+    <!-- Removido o aviso de arquivo -->
+    
+    <!-- Toolbar no topo da página -->
+    <div class="toolbar">
+      <div class="toolbar-container">
+        <div class="toolbar-logo">Meteo Mapa</div>
+        <nav class="toolbar-nav">
+          <a href="index.html" class="toolbar-link active">Início</a>
+          <a href="mapa.html" class="toolbar-link">Mapa</a>
+          <a href="calculos.html" class="toolbar-link">Cálculos</a>
+          <a href="projetos.html" class="toolbar-link">Meus Projetos</a>
+        </nav>
+        <div class="toolbar-actions">
+          <!-- Botões de login e criar conta -->
+          <a href="login.html" class="btn-login">Entrar</a>
+          <a href="registro.html" class="btn-signup">Criar Conta</a>
+          
+          <!-- Botão para alternar tema claro/escuro -->
+          <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema claro/escuro">
+            <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5001M17.6859 17.69L18.5 18.5001M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"></path></svg>
+            <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.32031 11.6835C3.32031 16.6541 7.34975 20.6835 12.3203 20.6835C16.1075 20.6835 19.3483 18.3443 20.6768 15.032C19.6402 15.4486 18.5059 15.6834 17.3203 15.6834C12.3497 15.6834 8.32031 11.654 8.32031 6.68342C8.32031 5.50338 8.55165 4.36259 8.96453 3.32996C5.65605 4.66028 3.32031 7.89912 3.32031 11.6835Z"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Toolbar Modal -->
+    <div id="toolbar-modal" class="toolbar-modal">
+      <div class="toolbar-modal-content">
+        <button id="toolbar-modal-close" class="toolbar-modal-close">×</button>
+        <div id="toolbar-modal-title" class="toolbar-modal-title">Título</div>
+        <div id="toolbar-modal-body" class="toolbar-modal-body">
+          <!-- Conteúdo será inserido via JavaScript -->
+        </div>
+      </div>
+    </div>
+    
     <!-- Elementos de fundo para o efeito Vision OS -->
     <div id="vision-background" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; overflow: hidden;">
       <div class="vision-blob" style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0) 70%); filter: blur(50px); top: -200px; right: -100px;"></div>
@@ -34,7 +245,354 @@
       <div class="vision-blob" style="position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(236,72,153,0.15) 0%, rgba(236,72,153,0) 70%); filter: blur(40px); top: 50%; right: 10%;"></div>
     </div>
     
-    <div id="root"></div>
-    <script type="module" src="/main.jsx"></script>
+    <div class="container">
+      <!-- Título e Subtítulo -->
+      <div class="title-container">
+        <h1 class="main-title">Meteo Mapa</h1>
+        <p class="subtitle">Plataforma meteorológica e de análise solar</p>
+        
+        <!-- Boto para acessar a pu00e1gina do mapa -->
+        <div class="map-access-container">
+          <a href="mapa.html" class="map-access-button">
+            <div class="map-access-icon">🗺️</div>
+            <div class="map-access-text">
+              <h3>Acessar Mapa Interativo</h3>
+              <p>Visualize dados meteorolu00f3gicos e calcule potencial solar</p>
+            </div>
+          </a>
+        </div>
+        
+        <div class="hero-actions">
+          <a href="registro.html" class="btn-secondary btn-hero">Criar Conta Gratuita</a>
+        </div>
+      </div>
+      
+      <div class="features-section">
+        <h2 class="section-title">Recursos Principais</h2>
+        
+        <div class="features-grid">
+          <div class="feature-card glass-panel">
+            <div class="feature-icon">🌡️</div>
+            <h3 class="feature-title">Dados Meteorológicos</h3>
+            <p class="feature-description">Acesse dados meteorológicos em tempo real e históricos para qualquer localização.</p>
+          </div>
+          
+          <div class="feature-card glass-panel">
+            <div class="feature-icon">📊</div>
+            <h3 class="feature-title">Análise Solar</h3>
+            <p class="feature-description">Calcule o potencial solar e o retorno do investimento para instalações fotovoltaicas.</p>
+          </div>
+          
+          <div class="feature-card glass-panel">
+            <div class="feature-icon">🗺️</div>
+            <h3 class="feature-title">Mapas Interativos</h3>
+            <p class="feature-description">Visualize dados em mapas interativos com diferentes camadas e filtros.</p>
+          </div>
+          
+          <div class="feature-card glass-panel">
+            <div class="feature-icon">📈</div>
+            <h3 class="feature-title">Relatórios Detalhados</h3>
+            <p class="feature-description">Gere relatórios detalhados e compartilhe seus projetos com clientes e parceiros.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="solar-panel-section">
+        <h2 class="section-title">Painéis Solares Disponíveis</h2>
+        
+        <div class="solar-panel-grid">
+          <!-- Painel Monocristalino -->
+          <div class="solar-panel-card" data-panel="monocristalino">
+            <div class="solar-panel-icon">☀️</div>
+            <div class="solar-panel-name" style="color: #3b82f6;">Monocristalino</div>
+            <div class="solar-panel-efficiency">21%</div>
+            <div class="solar-panel-range">18% – 23%</div>
+            <div class="solar-panel-description">Alta eficiência e durabilidade, ideal para espaços limitados.</div>
+            <a href="mapa.html" class="solar-panel-select">Selecionar</a>
+          </div>
+          
+          <!-- Painel PERC -->
+          <div class="solar-panel-card" data-panel="perc">
+            <div class="solar-panel-icon">🔆</div>
+            <div class="solar-panel-name" style="color: #8b5cf6;">PERC (monopremium)</div>
+            <div class="solar-panel-efficiency">22%</div>
+            <div class="solar-panel-range">20% – 24%</div>
+            <div class="solar-panel-description">Tecnologia avançada com melhor desempenho em condições de pouca luz.</div>
+            <a href="mapa.html" class="solar-panel-select">Selecionar</a>
+          </div>
+          
+          <!-- Painel Bifacial -->
+          <div class="solar-panel-card" data-panel="bifacial">
+            <div class="solar-panel-icon">⚡</div>
+            <div class="solar-panel-name" style="color: #ec4899;">Bifacial</div>
+            <div class="solar-panel-efficiency">21%+</div>
+            <div class="solar-panel-range">19% – 23% + 10-20%</div>
+            <div class="solar-panel-description">Captura luz de ambos os lados, aumentando a produção em até 20%.</div>
+            <a href="mapa.html" class="solar-panel-select">Selecionar</a>
+          </div>
+          
+          <!-- Painel Policristalino -->
+          <div class="solar-panel-card" data-panel="policristalino">
+            <div class="solar-panel-icon">🌞</div>
+            <div class="solar-panel-name" style="color: #10b981;">Policristalino</div>
+            <div class="solar-panel-efficiency">17%</div>
+            <div class="solar-panel-range">15% – 18%</div>
+            <div class="solar-panel-description">Boa relação custo-benefício, ideal para grandes instalações.</div>
+            <a href="mapa.html" class="solar-panel-select">Selecionar</a>
+          </div>
+          
+          <!-- Painel Filme Fino -->
+          <div class="solar-panel-card" data-panel="filme-fino">
+            <div class="solar-panel-icon">📱</div>
+            <div class="solar-panel-name" style="color: #f59e0b;">Filme Fino</div>
+            <div class="solar-panel-efficiency">12%</div>
+            <div class="solar-panel-range">10% – 13%</div>
+            <div class="solar-panel-description">Flexível e leve, ideal para superfícies curvas ou aplicações especiais.</div>
+            <a href="mapa.html" class="solar-panel-select">Selecionar</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass-panel map-container" style="max-width:1400px;width:96vw;margin:0 auto;">
+        <div style="padding:12px 24px;display:flex;align-items:center;justify-content:space-between;">
+          <h2 style="margin:0;font-size:1.25rem;font-weight:500;">Selecione seu terreno</h2>
+          <div style="display:flex;gap:8px;">
+            <input type="file" id="kml-upload" accept=".kml,.kmz" style="display:none;" />
+            <button onclick="document.getElementById('kml-upload').click()" class="btn-primary" style="font-size:0.9rem;">Importar KML/KMZ</button>
+          </div>
+        </div>
+        <div id="mapa-cantos" style="width:100%;min-width:700px;height:650px;overflow:hidden;border-radius:18px;"></div>
+      </div>
+    </div>
+    
+    <div id="root" class="container"></div>
+    <!-- React e ReactDOM via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel para JSX inline (caso necessário) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Chart.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Scripts para o mapa - Carregados via map-loader.js -->
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="map-loader.js"></script>
+    
+    <!-- Outros scripts para funcionalidades avanadas -->
+    <script src="https://unpkg.com/togeojson@0.16.0/dist/togeojson.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- Seus JS - Apenas os necessrios para a pu00e1gina inicial -->
+    <script src="main.js"></script>
+    
+    <!-- Script para funcionalidade da toolbar -->
+    <script>
+      // Função para mostrar o modal da toolbar
+      function showToolbarModal(type) {
+        const modal = document.getElementById('toolbar-modal');
+        const title = document.getElementById('toolbar-modal-title');
+        const body = document.getElementById('toolbar-modal-body');
+        
+        // Configura o conteúdo com base no tipo
+        switch(type) {
+          case 'ferramentas':
+            title.textContent = 'Ferramentas Disponíveis';
+            body.innerHTML = `
+              <div class="toolbar-modal-section">
+                <h3>Seleção de Terreno</h3>
+                <p>Use o mapa para selecionar os cantos do seu terreno. Clique em até 4 pontos para definir a área.</p>
+                <p>Você também pode importar arquivos KML/KMZ para definir o terreno automaticamente.</p>
+              </div>
+              <div class="toolbar-modal-section">
+                <h3>Cálculo Solar</h3>
+                <p>Após definir o terreno, escolha o tipo de painel solar e clique em Calcular para obter estimativas de produção e retorno financeiro.</p>
+              </div>
+              <div class="toolbar-modal-section">
+                <h3>Personalização</h3>
+                <p>Clique no botão de Informações ao lado de Calcular para personalizar parâmetros como horas de sol por ano e preço do kWh.</p>
+              </div>
+            `;
+            break;
+          case 'informacoes':
+            title.textContent = 'Informações do Projeto';
+            body.innerHTML = `
+              <div class="toolbar-modal-section">
+                <h3>Sobre o Simulador Solar</h3>
+                <p>Este simulador permite calcular o potencial de geração de energia solar para qualquer terreno em Portugal e estimar o retorno financeiro do investimento.</p>
+                <p>O design é inspirado no estilo Vision OS da Apple, com interfaces transparentes e efeitos de vidro.</p>
+              </div>
+              <div class="toolbar-modal-section">
+                <h3>Como Utilizar</h3>
+                <p>1. Selecione seu terreno no mapa</p>
+                <p>2. Escolha o tipo de painel solar</p>
+                <p>3. Ajuste os parâmetros se necessário</p>
+                <p>4. Clique em Calcular para ver os resultados</p>
+              </div>
+            `;
+            break;
+          case 'apis':
+            title.textContent = 'APIs Utilizadas';
+            body.innerHTML = `
+              <div class="toolbar-modal-section">
+                <h3>PVGIS - Photovoltaic Geographical Information System</h3>
+                <p>API da Comissão Europeia que fornece dados precisos de radiação solar e permite calcular a produção fotovoltaica em qualquer localização na Europa.</p>
+                <p><a href="https://re.jrc.ec.europa.eu/pvg_tools/en/" target="_blank">Acessar PVGIS</a></p>
+              </div>
+              <div class="toolbar-modal-section">
+                <h3>MapTiler & Leaflet</h3>
+                <p>Utilizado para a visualização de mapas interativos e cálculo preciso de áreas de terrenos.</p>
+                <p><a href="https://www.maptiler.com/" target="_blank">Acessar MapTiler</a></p>
+                <p><a href="https://leafletjs.com/" target="_blank">Acessar Leaflet</a></p>
+              </div>
+              <div class="toolbar-modal-section">
+                <h3>Turf.js</h3>
+                <p>Biblioteca JavaScript para análise geoespacial avançada, utilizada para cálculos de área e distâncias.</p>
+                <p><a href="https://turfjs.org/" target="_blank">Acessar Turf.js</a></p>
+              </div>
+            `;
+            break;
+          case 'fontes':
+            title.textContent = 'Fontes de Dados';
+            body.innerHTML = `
+              <div class="toolbar-modal-section">
+                <h3>Dados de Radiação Solar</h3>
+                <p>Os dados de radiação solar e horas de sol são obtidos do PVGIS (Photovoltaic Geographical Information System) da Comissão Europeia.</p>
+                <p>Estes dados são baseados em medições de satélite e estações meteorológicas ao longo de vários anos.</p>
+              </div>
+              <div class="toolbar-modal-section">
+                <h3>Especificações de Painéis Solares</h3>
+                <p>As especificações dos painéis solares (eficiência, potência, custo) são baseadas em médias de mercado atualizadas regularmente.</p>
+                <p>Os valores podem variar conforme o fabricante e a região.</p>
+              </div>
+              <div class="toolbar-modal-section">
+                <h3>Preços de Energia</h3>
+                <p>Os preços de energia utilizados para cálculos de poupança são baseados nas tarifas médias em Portugal.</p>
+                <p>Você pode personalizar este valor para refletir sua tarifa específica.</p>
+              </div>
+            `;
+            break;
+        }
+        
+        // Mostra o modal com animação
+        modal.classList.add('active');
+        
+        // Configura o botão de fechar
+        document.getElementById('toolbar-modal-close').onclick = function() {
+          modal.classList.remove('active');
+        };
+        
+        // Fechar ao clicar fora do conteúdo
+        modal.onclick = function(event) {
+          if (event.target === modal) {
+            modal.classList.remove('active');
+          }
+        };
+      }
+      
+      // Função para exibir notificações na interface
+      function showNotification(message, type = 'info') {
+        // Cria um elemento para exibir a notificação
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = `notification-message ${type}`;
+        
+        // Seleciona o ícone correto baseado no tipo
+        let icon = 'ℹ️'; // info
+        if (type === 'error') icon = '⚠️';
+        if (type === 'success') icon = '✅';
+        if (type === 'warning') icon = '⚠️';
+        
+        notificationDiv.innerHTML = `
+          <div class="notification-icon">${icon}</div>
+          <div class="notification-text">${message}</div>
+        `;
+        
+        // Adiciona ao corpo do documento
+        document.body.appendChild(notificationDiv);
+        
+        // Adiciona classe para animação de entrada
+        setTimeout(() => {
+          notificationDiv.classList.add('active');
+        }, 10);
+        
+        // Remove após alguns segundos
+        const timeVisible = type === 'error' ? 7000 : 4000;
+        setTimeout(() => {
+          notificationDiv.classList.remove('active');
+          notificationDiv.classList.add('fade-out');
+          setTimeout(() => {
+            if (document.body.contains(notificationDiv)) {
+              document.body.removeChild(notificationDiv);
+            }
+          }, 500);
+        }, timeVisible);
+      }
+      
+      // Função para exibir erros
+      function showError(message) {
+        showNotification(message, 'error');
+      }
+      
+      // Função chamada quando o mapa é carregado com sucesso
+      function onMapLoaded(mapInstance) {
+        console.log('Mapa na página inicial carregado com sucesso');
+        
+        // Esconde o overlay de carregamento
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        }
+        
+        // Adiciona eventos de clique no mapa
+        if (window.mapLibrary === 'maplibre') {
+          mapInstance.on('click', function(e) {
+            // Obtém as coordenadas do clique
+            const coords = e.lngLat;
+            if (!coords) return;
+            
+            // Mostra uma notificação sugerindo ir para a página de mapa para cálculos detalhados
+            showNotification('Clique no ícone do sol para acessar cálculos solares detalhados', 'info');
+          });
+        }
+      }
+      
+      // Configura o tema inicial com base nas preferências do sistema
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM carregado - Configurando interface da página inicial');
+        
+        // Configura tema e outras preferências do usuário
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        const lightIcon = document.getElementById('theme-icon-light');
+        const darkIcon = document.getElementById('theme-icon-dark');
+        
+        // Atualiza a aparência dos ícones
+        if (currentTheme === 'dark') {
+          lightIcon.style.display = 'block';
+          darkIcon.style.display = 'none';
+        } else {
+          lightIcon.style.display = 'none';
+          darkIcon.style.display = 'block';
+        }
+        
+        // Adiciona evento de clique para alternar o tema
+        themeToggle.addEventListener('click', function() {
+          const currentTheme = document.documentElement.getAttribute('data-theme');
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          
+          // Salva o tema no localStorage
+          localStorage.setItem('theme', newTheme);
+          document.documentElement.setAttribute('data-theme', newTheme);
+          
+          // Atualiza os ícones
+          if (newTheme === 'dark') {
+            lightIcon.style.display = 'block';
+            darkIcon.style.display = 'none';
+          } else {
+            lightIcon.style.display = 'none';
+            darkIcon.style.display = 'block';
+          }
+        });
+      });
+    </script>
   </body>
 </html>

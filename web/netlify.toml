@@ -1,10 +1,17 @@
+# Configurações de deploy para o Netlify
+
 [build]
-  publish = "dist"
-  command = "npm run build"
+  publish = "/"
+  command = "echo 'No build command needed'"
 
-[dev]
-  command = "npm run dev"
-  port = 5173
+[[headers]]
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline'; worker-src * blob: 'unsafe-inline'"
 
-[functions]
-  directory = "netlify/functions"
+# Assegura que o SPA funcione
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
